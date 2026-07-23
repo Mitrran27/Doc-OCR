@@ -1,0 +1,416 @@
+<!-- <!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>UCI — Documents</title>
+<style>
+    * { box-sizing: border-box; }
+    body {
+        font-family: -apple-system, system-ui, sans-serif;
+        max-width: 720px;
+        margin: 40px auto;
+        padding: 0 20px;
+        color: #222;
+    }
+    h1 { font-size: 1.4rem; margin-bottom: 4px; }
+    .subtitle { color: #666; font-size: 0.9rem; margin-bottom: 24px; }
+
+    .upload-box {
+        border: 2px dashed #ccc;
+        border-radius: 12px;
+        padding: 24px;
+        text-align: center;
+        margin-bottom: 30px;
+    }
+    .upload-box.dragover { border-color: #2563eb; background: #f0f5ff; }
+    input[type="text"] {
+        padding: 8px; font-size: 0.95rem; border: 1px solid #ccc; border-radius: 8px;
+        width: 220px; margin-bottom: 12px;
+    }
+    button {
+        padding: 9px 20px; font-size: 0.95rem; border: none; border-radius: 8px;
+        background: #2563eb; color: white; cursor: pointer;
+    }
+    button:disabled { background: #aaa; cursor: not-allowed; }
+
+    table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+    th, td { text-align: left; padding: 10px 8px; border-bottom: 1px solid #eee; font-size: 0.9rem; }
+    th { color: #888; font-weight: 600; font-size: 0.78rem; text-transform: uppercase; }
+
+    .status { padding: 3px 10px; border-radius: 12px; font-size: 0.78rem; font-weight: 600; }
+    .status-uploaded { background: #fff3cd; color: #8a6d00; }
+    .status-processing { background: #cfe2ff; color: #084298; }
+    .status-indexed { background: #d1e7dd; color: #0a5b3c; }
+    .status-failed { background: #f8d7da; color: #842029; }
+
+    .chat-link { color: #2563eb; text-decoration: none; font-weight: 600; }
+    .chat-link.disabled { color: #ccc; pointer-events: none; }
+
+    #upload-error { color: #b02a37; font-size: 0.85rem; margin-top: 8px; }
+</style>
+</head>
+<body>
+    <h1>UCI — Documents</h1>
+    <div class="subtitle">Upload a standard (PDF or pre-converted markdown), then chat with it on the next page.</div>
+
+    <div class="upload-box" id="drop-zone">
+        <div style="margin-bottom: 14px;">
+            <input type="text" id="standard-name" placeholder="Standard name (e.g. UL 864)"><br>
+            <input type="file" id="file-input" accept=".pdf,.md">
+        </div>
+        <button id="upload-btn">Upload &amp; Index</button>
+        <div id="upload-error"></div>
+    </div>
+
+    <h3>Indexed Documents</h3>
+    <table>
+        <thead>
+            <tr><th>Filename</th><th>Standard</th><th>Status</th><th>Chunks</th><th></th></tr>
+        </thead>
+        <tbody id="doc-list"></tbody>
+    </table>
+
+<script>
+    const uploadBtn = document.getElementById("upload-btn");
+    const fileInput = document.getElementById("file-input");
+    const standardInput = document.getElementById("standard-name");
+    const errorBox = document.getElementById("upload-error");
+    const docList = document.getElementById("doc-list");
+
+    async function refreshDocuments() {
+        const res = await fetch("/documents/");
+        const docs = await res.json();
+        docList.innerHTML = "";
+
+        for (const doc of docs) {
+            const tr = document.createElement("tr");
+            const canChat = doc.status === "indexed";
+            tr.innerHTML = `
+                <td>${doc.filename}</td>
+                <td>${doc.standard || "\u2014"}</td>
+                <td><span class="status status-${doc.status}">${doc.status}</span>${doc.error ? ` <span title="${doc.error}">\u26A0</span>` : ""}</td>
+                <td>${doc.num_chunks || 0}</td>
+                <td><a class="chat-link ${canChat ? "" : "disabled"}" href="chat.html?doc_id=${doc.doc_id}&name=${encodeURIComponent(doc.filename)}">Chat &rarr;</a></td>
+            `;
+            docList.appendChild(tr);
+        }
+    }
+
+    uploadBtn.addEventListener("click", async () => {
+        errorBox.textContent = "";
+        const file = fileInput.files[0];
+        if (!file) {
+            errorBox.textContent = "Choose a file first.";
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append("file", file);
+        formData.append("standard", standardInput.value || "");
+
+        uploadBtn.disabled = true;
+        uploadBtn.textContent = "Uploading...";
+
+        try {
+            const res = await fetch("/documents/upload", { method: "POST", body: formData });
+            if (!res.ok) {
+                const errText = await res.text();
+                throw new Error(errText);
+            }
+            fileInput.value = "";
+            standardInput.value = "";
+            await refreshDocuments();
+        } catch (err) {
+            errorBox.textContent = `Upload failed: ${err.message}`;
+        } finally {
+            uploadBtn.disabled = false;
+            uploadBtn.textContent = "Upload & Index";
+        }
+    });
+
+    refreshDocuments();
+    // Poll every 4s so "processing" rows flip to "indexed" without a manual refresh
+    setInterval(refreshDocuments, 4000);
+</script>
+</body>
+</html> -->
+
+
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>UCI — Documents</title>
+<link rel="stylesheet" href="/static/style.css">
+<style>
+    .intake {
+        border: 1px dashed var(--hairline-strong);
+        border-radius: 10px;
+        padding: 22px;
+        margin-bottom: 30px;
+        position: relative;
+        background: var(--card);
+    }
+    /* drafting-corner registration marks — a quiet nod to blueprint sheets */
+    .intake::before, .intake::after {
+        content: "";
+        position: absolute;
+        width: 14px;
+        height: 14px;
+        border: 2px solid var(--amber-border);
+    }
+    .intake::before { top: -1px; left: -1px; border-right: none; border-bottom: none; }
+    .intake::after { bottom: -1px; right: -1px; border-left: none; border-top: none; }
+
+    .intake-row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 14px; }
+    .intake-row input[type="text"] { width: 240px; }
+
+    #upload-error {
+        display: none;
+        align-items: flex-start;
+        gap: 7px;
+        color: var(--plate-red);
+        background: var(--plate-red-soft);
+        border: 1px solid var(--plate-red-border);
+        border-radius: 6px;
+        font-size: 0.82rem;
+        padding: 8px 11px;
+        margin-top: 10px;
+    }
+    #upload-error.show { display: flex; }
+
+    /* ---- document list: a grid, not a stack of divs, so columns actually align ---- */
+    .doc-list {
+        background: var(--card);
+        border: 1px solid var(--hairline);
+        border-radius: 8px;
+        overflow: hidden;
+    }
+    .doc-row {
+        display: grid;
+        grid-template-columns: 1fr auto auto;
+        align-items: center;
+        gap: 16px;
+        padding: 14px 16px;
+        border-bottom: 1px solid var(--hairline);
+    }
+    .doc-row:last-child { border-bottom: none; }
+    .doc-row:hover { background: var(--card-sunken); }
+
+    .doc-main { min-width: 0; }
+    .doc-filename {
+        font-weight: 500;
+        font-size: 0.93rem;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    .doc-meta {
+        font-family: var(--mono);
+        font-size: 0.72rem;
+        color: var(--ink-muted);
+        margin-top: 3px;
+        display: flex;
+        gap: 6px;
+        align-items: center;
+        flex-wrap: wrap;
+    }
+    .doc-meta .dot { color: var(--ink-faint); }
+    .doc-meta .err-toggle {
+        color: var(--plate-red);
+        cursor: pointer;
+        text-decoration: underline;
+        text-decoration-style: dotted;
+        background: none;
+        border: none;
+        font: inherit;
+        padding: 0;
+    }
+    .doc-err-detail {
+        display: none;
+        grid-column: 1 / -1;
+        font-family: var(--mono);
+        font-size: 0.74rem;
+        color: var(--plate-red);
+        background: var(--plate-red-soft);
+        border: 1px solid var(--plate-red-border);
+        border-radius: 5px;
+        padding: 8px 10px;
+        margin-top: 8px;
+        white-space: pre-wrap;
+        word-break: break-word;
+    }
+    .doc-err-detail.show { display: block; }
+
+    .chat-link {
+        font-family: var(--mono);
+        font-size: 0.76rem;
+        font-weight: 600;
+        text-decoration: none;
+        padding: 7px 13px;
+        border: 1px solid var(--amber);
+        border-radius: 5px;
+        color: var(--amber-ink);
+        white-space: nowrap;
+    }
+    .chat-link:hover { background: var(--amber-soft); }
+    .chat-link.disabled {
+        border-color: var(--hairline-strong);
+        color: var(--ink-faint);
+        pointer-events: none;
+    }
+
+    .empty-state {
+        font-family: var(--mono);
+        font-size: 0.82rem;
+        color: var(--ink-muted);
+        padding: 26px 16px;
+        text-align: center;
+        background: var(--card);
+        border: 1px solid var(--hairline);
+        border-radius: 8px;
+    }
+
+    @media (max-width: 560px) {
+        .doc-row { grid-template-columns: 1fr; row-gap: 8px; }
+        .doc-row > .plate { justify-self: start; }
+    }
+</style>
+</head>
+<body>
+<div class="frame">
+    <div class="wordmark">
+        <svg class="badge" width="30" height="30" viewBox="0 0 30 30" xmlns="http://www.w3.org/2000/svg">
+            <rect x="1.5" y="1.5" width="27" height="27" rx="5" fill="none" stroke="#20242A" stroke-width="1.6"/>
+            <circle cx="5.5" cy="5.5" r="1.2" fill="#B8791F"/>
+            <circle cx="24.5" cy="5.5" r="1.2" fill="#B8791F"/>
+            <circle cx="5.5" cy="24.5" r="1.2" fill="#B8791F"/>
+            <circle cx="24.5" cy="24.5" r="1.2" fill="#B8791F"/>
+            <text x="15" y="19" font-family="IBM Plex Mono, monospace" font-size="9.5" font-weight="600" text-anchor="middle" fill="#20242A">UCI</text>
+        </svg>
+        <span class="mark">UCI</span>
+        <span class="sub">Document Index</span>
+    </div>
+    <div class="rule"></div>
+
+    <div class="intake">
+        <div class="eyebrow">Add a document</div>
+        <div class="intake-row">
+            <input type="text" id="standard-name" placeholder="Standard name — e.g. UL 864">
+            <input type="file" id="file-input" accept=".pdf,.md">
+        </div>
+        <button id="upload-btn">Upload &amp; Index</button>
+        <div id="upload-error"></div>
+    </div>
+
+    <div class="eyebrow">Indexed documents</div>
+    <div id="doc-list"></div>
+    <div style="flex:1"></div>
+    <div class="disclaimer">UCI IS AN INTERNAL RESEARCH AID — NOT A SUBSTITUTE FOR COMPLIANCE SIGN-OFF</div>
+</div>
+
+<script>
+    const uploadBtn = document.getElementById("upload-btn");
+    const fileInput = document.getElementById("file-input");
+    const standardInput = document.getElementById("standard-name");
+    const errorBox = document.getElementById("upload-error");
+    const docList = document.getElementById("doc-list");
+
+    function statusPlateClass(status) {
+        if (status === "indexed") return "plate-ok";
+        if (status === "failed") return "plate-failed";
+        return "plate-pending"; // uploaded / processing
+    }
+
+    function showError(msg) {
+        errorBox.textContent = msg;
+        errorBox.classList.toggle("show", Boolean(msg));
+    }
+
+    async function refreshDocuments() {
+        const res = await fetch("/documents/");
+        const docs = await res.json();
+
+        if (docs.length === 0) {
+            docList.innerHTML = `<div class="empty-state">No documents indexed yet — upload one above to begin.</div>`;
+            return;
+        }
+
+        const wrap = document.createElement("div");
+        wrap.className = "doc-list";
+
+        docs.forEach((doc, i) => {
+            const canChat = doc.status === "indexed";
+            const row = document.createElement("div");
+            row.className = "doc-row";
+
+            const metaParts = [doc.standard ? doc.standard : "no standard tag"];
+            const metaHtml = [
+                `<span>${metaParts[0]}</span>`,
+                `<span class="dot">\u00b7</span>`,
+                `<span>${doc.num_chunks || 0} chunks</span>`,
+                `<span class="dot">\u00b7</span>`,
+                `<span>${doc.doc_id}</span>`,
+            ];
+            if (doc.error) {
+                metaHtml.push(`<span class="dot">\u00b7</span>`, `<button class="err-toggle" data-idx="${i}" type="button">why failed?</button>`);
+            }
+
+            row.innerHTML = `
+                <div class="doc-main">
+                    <div class="doc-filename" title="${doc.filename}">${doc.filename}</div>
+                    <div class="doc-meta">${metaHtml.join("")}</div>
+                    ${doc.error ? `<div class="doc-err-detail" id="err-${i}">${doc.error}</div>` : ""}
+                </div>
+                <span class="plate ${statusPlateClass(doc.status)}">${doc.status}</span>
+                <a class="chat-link ${canChat ? "" : "disabled"}" href="chat.html?doc_id=${doc.doc_id}&name=${encodeURIComponent(doc.filename)}">Open &rarr;</a>
+            `;
+            wrap.appendChild(row);
+        });
+
+        docList.innerHTML = "";
+        docList.appendChild(wrap);
+
+        docList.querySelectorAll(".err-toggle").forEach(btn => {
+            btn.addEventListener("click", () => {
+                document.getElementById(`err-${btn.dataset.idx}`).classList.toggle("show");
+            });
+        });
+    }
+
+    uploadBtn.addEventListener("click", async () => {
+        showError("");
+        const file = fileInput.files[0];
+        if (!file) {
+            showError("Choose a file first.");
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append("file", file);
+        formData.append("standard", standardInput.value || "");
+
+        uploadBtn.disabled = true;
+        uploadBtn.textContent = "Uploading\u2026";
+
+        try {
+            const res = await fetch("/documents/upload", { method: "POST", body: formData });
+            if (!res.ok) throw new Error(await res.text());
+            fileInput.value = "";
+            standardInput.value = "";
+            await refreshDocuments();
+        } catch (err) {
+            showError(`Upload failed: ${err.message}`);
+        } finally {
+            uploadBtn.disabled = false;
+            uploadBtn.textContent = "Upload & Index";
+        }
+    });
+
+    refreshDocuments();
+    setInterval(refreshDocuments, 4000);
+</script>
+</body>
+</html>

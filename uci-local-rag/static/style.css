@@ -1,0 +1,226 @@
+/* =========================================================================
+   UCI Design System — v2 (light)
+   Direction unchanged: a technical logbook for engineers, not a chat
+   product. Grounded in agency rating plates riveted to fire alarm
+   equipment. v2 moves the workspace to a pale drafting-paper light theme,
+   fixes the citation-chip overflow, simplifies the document list, and
+   gives the mark its own literal badge instead of just a word.
+   ========================================================================= */
+
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
+
+:root {
+    --paper: #F6F7F4;
+    --card: #FFFFFF;
+    --card-sunken: #FBFBF9;
+    --hairline: #E1E4DF;
+    --hairline-strong: #C9CDC6;
+    --ink: #20242A;
+    --ink-muted: #6B7178;
+    --ink-faint: #9BA0A6;
+
+    --amber: #B8791F;
+    --amber-ink: #7A5013;
+    --amber-soft: #F6E9D2;
+    --amber-border: #E7C58B;
+
+    --plate-red: #A23E2C;
+    --plate-red-soft: #F5E4DF;
+    --plate-red-border: #DEB2A6;
+
+    --ok: #2F7D4F;
+    --ok-soft: #E3F1E7;
+    --ok-border: #B7DAC2;
+
+    --display: 'Space Grotesk', system-ui, sans-serif;
+    --body: 'IBM Plex Sans', system-ui, sans-serif;
+    --mono: 'IBM Plex Mono', 'SF Mono', monospace;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--body);
+    height: 100%;
+}
+
+/* ---- structural chrome ------------------------------------------------ */
+
+.frame {
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 30px 24px 20px;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.wordmark {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 2px;
+}
+
+.badge { flex-shrink: 0; display: block; }
+
+.wordmark .mark {
+    font-family: var(--display);
+    font-weight: 700;
+    font-size: 1.28rem;
+    letter-spacing: 0.01em;
+}
+
+.wordmark .sub {
+    font-family: var(--mono);
+    font-size: 0.72rem;
+    color: var(--ink-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    padding-left: 2px;
+}
+
+.rule {
+    height: 2px;
+    background: linear-gradient(90deg, var(--amber) 0 42px, var(--hairline) 42px 100%);
+    margin: 16px 0 22px;
+}
+
+.eyebrow {
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    color: var(--ink-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.09em;
+    margin-bottom: 8px;
+}
+
+/* ---- status pill — small, used only for doc status -------------------- */
+
+.plate {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    font-weight: 500;
+    padding: 3px 9px;
+    border: 1px solid var(--hairline-strong);
+    border-radius: 20px;
+    background: var(--card-sunken);
+    color: var(--ink-muted);
+    white-space: nowrap;
+}
+.plate::before {
+    content: "";
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: var(--ink-faint);
+    flex-shrink: 0;
+}
+.plate.plate-ok { border-color: var(--ok-border); color: var(--ok); background: var(--ok-soft); }
+.plate.plate-ok::before { background: var(--ok); }
+.plate.plate-pending { border-color: var(--amber-border); color: var(--amber-ink); background: var(--amber-soft); }
+.plate.plate-pending::before { background: var(--amber); }
+.plate.plate-failed { border-color: var(--plate-red-border); color: var(--plate-red); background: var(--plate-red-soft); }
+.plate.plate-failed::before { background: var(--plate-red); }
+
+/* ---- citation list — clause tag + full title + page, one per row ------ */
+/* (a chip that abbreviates to "CL 25.10 · P67" saves space but hides what
+   is actually being cited; a reader needs the title without hovering) */
+
+.citation-item {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    padding: 6px 0;
+}
+
+.citation-tag {
+    flex-shrink: 0;
+    font-family: var(--mono);
+    font-size: 0.71rem;
+    font-weight: 500;
+    padding: 2px 7px;
+    border: 1px solid var(--plate-red-border);
+    border-left-width: 3px;
+    border-radius: 3px;
+    background: var(--plate-red-soft);
+    color: var(--plate-red);
+    white-space: nowrap;
+}
+
+.citation-title {
+    flex: 1;
+    min-width: 0;
+    font-size: 0.85rem;
+    color: var(--ink);
+    line-height: 1.4;
+}
+
+.citation-page {
+    flex-shrink: 0;
+    font-family: var(--mono);
+    font-size: 0.74rem;
+    color: var(--ink-muted);
+    white-space: nowrap;
+}
+
+/* ---- buttons ------------------------------------------------------------ */
+
+button, .btn {
+    font-family: var(--body);
+    font-weight: 600;
+    font-size: 0.88rem;
+    border: none;
+    border-radius: 6px;
+    padding: 10px 20px;
+    background: var(--amber);
+    color: #FFFDF8;
+    cursor: pointer;
+    transition: filter 0.12s ease;
+}
+button:hover, .btn:hover { filter: brightness(1.06); }
+button:disabled { background: var(--hairline-strong); color: #FFFFFF; cursor: not-allowed; filter: none; }
+
+.btn-ghost {
+    background: transparent;
+    border: 1px solid var(--hairline-strong);
+    color: var(--ink-muted);
+}
+
+/* ---- form elements -------------------------------------------------------- */
+
+input[type="text"], textarea {
+    font-family: var(--body);
+    font-size: 0.92rem;
+    background: var(--card);
+    border: 1px solid var(--hairline-strong);
+    color: var(--ink);
+    border-radius: 6px;
+    padding: 10px 12px;
+}
+input[type="text"]::placeholder, textarea::placeholder { color: var(--ink-faint); }
+input[type="text"]:focus, textarea:focus {
+    outline: 2px solid var(--amber);
+    outline-offset: 1px;
+    border-color: var(--amber);
+}
+input[type="file"] { font-family: var(--body); font-size: 0.85rem; color: var(--ink-muted); }
+
+::selection { background: var(--amber-soft); }
+
+a { color: var(--amber-ink); }
+
+.disclaimer {
+    font-family: var(--mono);
+    font-size: 0.66rem;
+    color: var(--ink-faint);
+    text-align: center;
+    padding-top: 12px;
+    letter-spacing: 0.02em;
+}

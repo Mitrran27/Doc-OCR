@@ -1,0 +1,29 @@
+# .venv/
+# __pycache__/
+# raw_ocr_output/
+# *.pyc
+# input/*.pdf
+# <<<<<<< HEAD
+# =======
+# uci-local-rag/uploaded_docs/
+# uci-local-rag/uploaded_docs/
+# >>>>>>> df1426b (Initial commit)
+
+
+
+__pycache__/
+*.pyc
+.venv/
+venv/
+uci-local-rag-OLD/
+
+chroma_db/
+kb/
+kb_per_doc/
+raw_ocr_output/
+input/
+uploaded_docs/
+documents_db.json
+
+*.bak
+*-OLD/

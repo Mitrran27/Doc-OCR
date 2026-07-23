@@ -1,0 +1,545 @@
+<!-- <!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>UCI — Chat</title>
+<style>
+    * { box-sizing: border-box; }
+    body {
+        font-family: -apple-system, system-ui, sans-serif;
+        max-width: 760px;
+        margin: 0 auto;
+        padding: 20px;
+        height: 100vh;
+        display: flex;
+        flex-direction: column;
+    }
+    .top-bar { display: flex; align-items: center; gap: 10px; margin-bottom: 4px; }
+    .back-link { color: #2563eb; text-decoration: none; font-size: 0.9rem; }
+    h1 { font-size: 1.15rem; margin: 0; }
+    .subtitle { font-size: 0.85rem; color: #666; margin-bottom: 16px; }
+
+    #chat-window { flex: 1; overflow-y: auto; padding: 10px 4px; display: flex; flex-direction: column; gap: 14px; }
+    .msg { max-width: 80%; padding: 12px 16px; border-radius: 14px; line-height: 1.45; white-space: pre-wrap; }
+    .user { align-self: flex-end; background: #2563eb; color: white; border-bottom-right-radius: 4px; }
+    .assistant { align-self: flex-start; background: #f5f5f5; border: 1px solid #e2e2e2; border-bottom-left-radius: 4px; }
+    .sources { font-size: 0.78rem; color: #666; margin-top: 8px; }
+    .sources ul { margin: 4px 0 0 0; padding-left: 18px; }
+    .loading { align-self: flex-start; color: #888; font-style: italic; font-size: 0.9rem; }
+
+    #input-row { display: flex; gap: 8px; padding-top: 12px; border-top: 1px solid #e2e2e2; }
+    #question { flex: 1; padding: 12px; font-size: 1rem; border: 1px solid #ccc; border-radius: 10px; resize: none; }
+    #send-btn { padding: 0 22px; font-size: 1rem; border: none; border-radius: 10px; background: #2563eb; color: white; cursor: pointer; }
+    #send-btn:disabled { background: #aaa; cursor: not-allowed; }
+    .disclaimer { font-size: 0.72rem; color: #999; text-align: center; padding: 8px 0 0 0; }
+</style>
+</head>
+<body>
+    <div class="top-bar">
+        <a class="back-link" href="/">&larr; Documents</a>
+        <h1 id="doc-title">UCI Chat</h1>
+    </div>
+    <div class="subtitle">Answers are generated only from the selected document's indexed content.</div>
+
+    <div id="chat-window"></div>
+
+    <div id="input-row">
+        <textarea id="question" rows="1" placeholder="Ask a question about this document..."></textarea>
+        <button id="send-btn">Ask</button>
+    </div>
+    <div class="disclaimer">Internal research aid only — verify citations against the official standard.</div>
+
+<script>
+    const params = new URLSearchParams(window.location.search);
+    const docId = params.get("doc_id");
+    const docName = params.get("name") || "document";
+    document.getElementById("doc-title").textContent = `Chat — ${decodeURIComponent(docName)}`;
+
+    const chatWindow = document.getElementById("chat-window");
+    const questionBox = document.getElementById("question");
+    const sendBtn = document.getElementById("send-btn");
+
+    if (!docId) {
+        addMessage("No document selected. Go back and pick one from the list.", "assistant");
+        sendBtn.disabled = true;
+    }
+
+    function addMessage(text, role) {
+        const div = document.createElement("div");
+        div.className = `msg ${role}`;
+        div.textContent = text;
+        chatWindow.appendChild(div);
+        chatWindow.scrollTop = chatWindow.scrollHeight;
+        return div;
+    }
+
+    function addSources(sources, container) {
+        if (!sources || sources.length === 0) return;
+        const seen = new Set();
+        const items = [];
+        for (const s of sources) {
+            const key = `${s.clause}-${s.pages}`;
+            if (seen.has(key)) continue; // dedupe repeated chunks from the same clause
+            seen.add(key);
+            items.push(`<li>Clause ${s.clause} — ${s.title} (page ${s.pages})</li>`);
+        }
+        if (items.length === 0) return;
+        const box = document.createElement("div");
+        box.className = "sources";
+        box.innerHTML = `<strong>Sources:</strong><ul>${items.join("")}</ul>`;
+        container.appendChild(box);
+    }
+
+    async function sendQuestion() {
+        const question = questionBox.value.trim();
+        if (!question || !docId) return;
+
+        addMessage(question, "user");
+        questionBox.value = "";
+        sendBtn.disabled = true;
+
+        const loadingDiv = document.createElement("div");
+        loadingDiv.className = "loading";
+        loadingDiv.textContent = "UCI is thinking...";
+        chatWindow.appendChild(loadingDiv);
+        chatWindow.scrollTop = chatWindow.scrollHeight;
+
+        try {
+            const res = await fetch("/chat/", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ query: question, doc_id: docId }),
+            });
+
+            if (!res.ok) {
+                const errText = await res.text();
+                throw new Error(errText || `Request failed (${res.status})`);
+            }
+
+            const data = await res.json();
+            loadingDiv.remove();
+            const answerDiv = addMessage(data.answer, "assistant");
+            addSources(data.sources, answerDiv);
+        } catch (err) {
+            loadingDiv.remove();
+            addMessage(`Error: ${err.message}`, "assistant");
+        } finally {
+            sendBtn.disabled = false;
+        }
+    }
+
+    sendBtn.addEventListener("click", sendQuestion);
+    questionBox.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" && !e.shiftKey) {
+            e.preventDefault();
+            sendQuestion();
+        }
+    });
+</script>
+</body>
+</html> -->
+
+
+
+
+
+<!-- <!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>UCI — Chat</title>
+<link rel="stylesheet" href="/static/style.css">
+<style>
+    .frame { max-width: 760px; }
+    .top-row { display: flex; align-items: baseline; gap: 12px; margin-bottom: 2px; }
+    .back { font-family: var(--mono); font-size: 0.78rem; color: var(--ink-muted); text-decoration: none; }
+    .back:hover { color: var(--amber-ink); }
+    .doc-name {
+        font-family: var(--display);
+        font-weight: 600;
+        font-size: 1.02rem;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    /* scrollbar-gutter reserves the scrollbar's own lane so it never sits
+       on top of card content or clips the citation strip */
+    #log {
+        flex: 1;
+        overflow-y: auto;
+        overflow-x: hidden;
+        scrollbar-gutter: stable;
+        padding: 18px 4px 18px 2px;
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+    }
+
+    .entry-user {
+        font-size: 0.95rem;
+        color: var(--ink-muted);
+        padding-left: 14px;
+        border-left: 2px solid var(--hairline-strong);
+    }
+    .entry-assistant {
+        background: var(--card);
+        border: 1px solid var(--hairline);
+        border-left: 3px solid var(--amber);
+        border-radius: 6px;
+        padding: 16px 18px;
+        font-size: 0.95rem;
+        line-height: 1.55;
+        white-space: pre-wrap;
+        overflow-wrap: break-word;
+        /* height is intrinsic to content — never fixed/clipped */
+        height: auto;
+    }
+
+    .citations { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--hairline); }
+    .citations-label {
+        font-family: var(--mono);
+        font-size: 0.66rem;
+        color: var(--ink-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        margin-bottom: 8px;
+    }
+    .citation-list {
+        display: flex;
+        flex-direction: column;
+    }
+    .citation-item + .citation-item { border-top: 1px solid var(--hairline); }
+
+    .thinking { font-family: var(--mono); font-size: 0.8rem; color: var(--ink-muted); font-style: italic; }
+
+    #input-row { display: flex; gap: 8px; padding-top: 14px; border-top: 1px solid var(--hairline); }
+    #question { flex: 1; resize: none; }
+</style>
+</head>
+<body>
+<div class="frame">
+    <div class="top-row">
+        <a class="back" href="/">&larr; Index</a>
+    </div>
+    <div class="wordmark" style="margin-top:4px;">
+        <svg class="badge" width="26" height="26" viewBox="0 0 30 30" xmlns="http://www.w3.org/2000/svg">
+            <rect x="1.5" y="1.5" width="27" height="27" rx="5" fill="none" stroke="#20242A" stroke-width="1.6"/>
+            <circle cx="5.5" cy="5.5" r="1.2" fill="#B8791F"/>
+            <circle cx="24.5" cy="5.5" r="1.2" fill="#B8791F"/>
+            <circle cx="5.5" cy="24.5" r="1.2" fill="#B8791F"/>
+            <circle cx="24.5" cy="24.5" r="1.2" fill="#B8791F"/>
+            <text x="15" y="19" font-family="IBM Plex Mono, monospace" font-size="9.5" font-weight="600" text-anchor="middle" fill="#20242A">UCI</text>
+        </svg>
+        <span class="doc-name" id="doc-title">\u2014</span>
+    </div>
+    <div class="rule"></div>
+
+    <div id="log"></div>
+
+    <div id="input-row">
+        <textarea id="question" rows="1" placeholder="Ask about this document\u2026"></textarea>
+        <button id="send-btn">Ask</button>
+    </div>
+    <div class="disclaimer">VERIFY EVERY CITATION AGAINST THE OFFICIAL STANDARD BEFORE COMPLIANCE SIGN-OFF</div>
+</div>
+
+<script>
+    const params = new URLSearchParams(window.location.search);
+    const docId = params.get("doc_id");
+    const docName = params.get("name") || "No document selected";
+    document.getElementById("doc-title").textContent = decodeURIComponent(docName);
+    document.getElementById("doc-title").title = decodeURIComponent(docName);
+
+    const log = document.getElementById("log");
+    const questionBox = document.getElementById("question");
+    const sendBtn = document.getElementById("send-btn");
+
+    if (!docId) {
+        addAssistant("No document selected \u2014 go back to the index and open one.", []);
+        sendBtn.disabled = true;
+    }
+
+    function addUser(text) {
+        const div = document.createElement("div");
+        div.className = "entry-user";
+        div.textContent = text;
+        log.appendChild(div);
+        log.scrollTop = log.scrollHeight;
+    }
+
+    function addAssistant(text, sources) {
+        const wrap = document.createElement("div");
+        wrap.className = "entry-assistant";
+        wrap.textContent = text;
+
+        if (sources && sources.length) {
+            const seen = new Set();
+            const rows = [];
+            for (const s of sources) {
+                const key = `${s.clause}-${s.pages}`;
+                if (seen.has(key)) continue;
+                seen.add(key);
+
+                const item = document.createElement("div");
+                item.className = "citation-item";
+
+                const tag = document.createElement("span");
+                tag.className = "citation-tag";
+                tag.textContent = `CL ${s.clause}`;
+
+                const title = document.createElement("span");
+                title.className = "citation-title";
+                title.textContent = s.title || "\u2014";
+
+                const page = document.createElement("span");
+                page.className = "citation-page";
+                page.textContent = `p. ${s.pages}`;
+
+                item.appendChild(tag);
+                item.appendChild(title);
+                item.appendChild(page);
+                rows.push(item);
+            }
+            if (rows.length) {
+                const box = document.createElement("div");
+                box.className = "citations";
+                const rowLabel = document.createElement("div");
+                rowLabel.className = "citations-label";
+                rowLabel.textContent = "Cited from";
+                const list = document.createElement("div");
+                list.className = "citation-list";
+                rows.forEach(r => list.appendChild(r));
+                box.appendChild(rowLabel);
+                box.appendChild(list);
+                wrap.appendChild(box);
+            }
+        }
+
+        log.appendChild(wrap);
+        log.scrollTop = log.scrollHeight;
+        return wrap;
+    }
+
+    async function sendQuestion() {
+        const question = questionBox.value.trim();
+        if (!question || !docId) return;
+
+        addUser(question);
+        questionBox.value = "";
+        sendBtn.disabled = true;
+
+        const thinking = document.createElement("div");
+        thinking.className = "thinking";
+        thinking.textContent = "UCI is searching the standard\u2026";
+        log.appendChild(thinking);
+        log.scrollTop = log.scrollHeight;
+
+        try {
+            const res = await fetch("/chat/", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ query: question, doc_id: docId }),
+            });
+            if (!res.ok) throw new Error(await res.text());
+            const data = await res.json();
+            thinking.remove();
+            addAssistant(data.answer, data.sources);
+        } catch (err) {
+            thinking.remove();
+            addAssistant(`Error: ${err.message}`, []);
+        } finally {
+            sendBtn.disabled = false;
+        }
+    }
+
+    sendBtn.addEventListener("click", sendQuestion);
+    questionBox.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" && !e.shiftKey) {
+            e.preventDefault();
+            sendQuestion();
+        }
+    });
+</script>
+</body>
+</html> -->
+
+
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>UCI — Chat</title>
+<link rel="stylesheet" href="/static/style.css">
+<style>
+    .frame { max-width: 760px; }
+    .top-row { display: flex; align-items: baseline; gap: 12px; margin-bottom: 2px; }
+    .back { font-family: var(--mono); font-size: 0.78rem; color: var(--text-muted); text-decoration: none; }
+    .back:hover { color: var(--amber); }
+    .doc-name { font-family: var(--display); font-weight: 600; font-size: 1.05rem; }
+
+    #log { flex: 1; overflow-y: auto; padding: 18px 2px; display: flex; flex-direction: column; gap: 20px; }
+
+    .entry-user {
+        font-size: 0.95rem;
+        color: var(--text-muted);
+        padding-left: 14px;
+        border-left: 2px solid var(--hairline);
+    }
+    .entry-assistant {
+        background: var(--panel);
+        border: 1px solid var(--hairline);
+        border-left: 3px solid var(--amber);
+        border-radius: 6px;
+        padding: 16px 18px;
+        font-size: 0.95rem;
+        line-height: 1.55;
+        white-space: pre-wrap;
+    }
+    .citations { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--hairline); }
+    .citations-label { font-family: var(--mono); font-size: 0.68rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 7px; }
+
+    .figures { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--hairline); display: flex; flex-wrap: wrap; gap: 12px; }
+    .figure-item { margin: 0; max-width: 220px; }
+    .figure-item img { width: 100%; border-radius: 4px; border: 1px solid var(--hairline); display: block; }
+    .figure-item figcaption { font-family: var(--mono); font-size: 0.68rem; color: var(--text-muted); margin-top: 5px; }
+
+    .thinking { font-family: var(--mono); font-size: 0.8rem; color: var(--text-muted); font-style: italic; }
+
+    #input-row { display: flex; gap: 8px; padding-top: 14px; border-top: 1px solid var(--hairline); }
+    #question { flex: 1; resize: none; }
+</style>
+</head>
+<body>
+<div class="frame">
+    <div class="top-row">
+        <a class="back" href="/">&larr; Index</a>
+    </div>
+    <div class="wordmark" style="margin-top:2px;">
+        <span class="mark">UCI</span>
+        <span class="doc-name" id="doc-title">\u2014</span>
+    </div>
+    <div class="rule"></div>
+
+    <div id="log"></div>
+
+    <div id="input-row">
+        <textarea id="question" rows="1" placeholder="Ask about this document\u2026"></textarea>
+        <button id="send-btn">Ask</button>
+    </div>
+    <div class="disclaimer">VERIFY EVERY CITATION AGAINST THE OFFICIAL STANDARD BEFORE COMPLIANCE SIGN-OFF</div>
+</div>
+
+<script>
+    const params = new URLSearchParams(window.location.search);
+    const docId = params.get("doc_id");
+    const docName = params.get("name") || "No document selected";
+    document.getElementById("doc-title").textContent = decodeURIComponent(docName);
+
+    const log = document.getElementById("log");
+    const questionBox = document.getElementById("question");
+    const sendBtn = document.getElementById("send-btn");
+
+    if (!docId) {
+        addAssistant("No document selected \u2014 go back to the index and open one.", []);
+        sendBtn.disabled = true;
+    }
+
+    function addUser(text) {
+        const div = document.createElement("div");
+        div.className = "entry-user";
+        div.textContent = text;
+        log.appendChild(div);
+        log.scrollTop = log.scrollHeight;
+    }
+
+    function addAssistant(text, sources, images) {
+        const wrap = document.createElement("div");
+        wrap.className = "entry-assistant";
+        wrap.textContent = text;
+
+        if (sources && sources.length) {
+            const seen = new Set();
+            const plates = [];
+            for (const s of sources) {
+                const key = `${s.clause}-${s.pages}`;
+                if (seen.has(key)) continue;
+                seen.add(key);
+                plates.push(`<span class="citation-plate">CL ${s.clause} \u00b7 P${s.pages}</span>`);
+            }
+            if (plates.length) {
+                const box = document.createElement("div");
+                box.className = "citations";
+                box.innerHTML = `<div class="citations-label">Cited from</div>${plates.join("")}`;
+                wrap.appendChild(box);
+            }
+        }
+
+        // Figures relevant to the retrieved context — shown automatically
+        // whenever the answer drew from a clause that has an associated
+        // image, rather than trying to guess "did the user ask for an image".
+        if (images && images.length) {
+            const figBox = document.createElement("div");
+            figBox.className = "figures";
+            figBox.innerHTML = `<div class="citations-label">Figures</div>`;
+            for (const img of images) {
+                const fig = document.createElement("figure");
+                fig.className = "figure-item";
+                fig.innerHTML = `
+                    <img src="${img.url}" alt="${img.caption}" loading="lazy">
+                    <figcaption>${img.caption}</figcaption>
+                `;
+                figBox.appendChild(fig);
+            }
+            wrap.appendChild(figBox);
+        }
+
+        log.appendChild(wrap);
+        log.scrollTop = log.scrollHeight;
+        return wrap;
+    }
+
+    async function sendQuestion() {
+        const question = questionBox.value.trim();
+        if (!question || !docId) return;
+
+        addUser(question);
+        questionBox.value = "";
+        sendBtn.disabled = true;
+
+        const thinking = document.createElement("div");
+        thinking.className = "thinking";
+        thinking.textContent = "UCI is searching the standard\u2026";
+        log.appendChild(thinking);
+        log.scrollTop = log.scrollHeight;
+
+        try {
+            const res = await fetch("/chat/", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ query: question, doc_id: docId }),
+            });
+            if (!res.ok) throw new Error(await res.text());
+            const data = await res.json();
+            thinking.remove();
+            addAssistant(data.answer, data.sources, data.images);
+        } catch (err) {
+            thinking.remove();
+            addAssistant(`Error: ${err.message}`, []);
+        } finally {
+            sendBtn.disabled = false;
+        }
+    }
+
+    sendBtn.addEventListener("click", sendQuestion);
+    questionBox.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" && !e.shiftKey) {
+            e.preventDefault();
+            sendQuestion();
+        }
+    });
+</script>
+</body>
+</html>
