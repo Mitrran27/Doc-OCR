@@ -1,0 +1,62 @@
+{
+  "e5c5a47a": [
+    {
+      "role": "user",
+      "text": "Show me an example of an enclosure side opening",
+      "sources": [],
+      "images": [],
+      "at": "2026-07-24T01:35:14.332098+00:00"
+    },
+    {
+      "role": "assistant",
+      "text": "An example of an enclosure side opening from Figure 39.3:\n\n![](images/39-6-3_0146cd372aed72fffbd196cf49850dfe39bcf71b3d3fbf0f0fd67f46c422b32d.jpg)\n\nThe side opening is shown with louvers designed to deflect an external falling object outward, complying with clause 39.6.3(1). The opening dimensions are L=30mm and V=85cm\u00b2, meeting the requirement of being no larger than 4.8 mm in any dimension.\n\nVerify against the official standard before relying on this for compliance sign-off.",
+      "sources": [
+        {
+          "clause": "39.6.3",
+          "title": "Enclosure side openings",
+          "pages": "121-124"
+        },
+        {
+          "clause": "39.6.3",
+          "title": "Enclosure side openings",
+          "pages": "121-124"
+        },
+        {
+          "clause": "39.6.4",
+          "title": "Enclosure bottom openings",
+          "pages": "124-126"
+        },
+        {
+          "clause": "39.6.4",
+          "title": "Enclosure bottom openings",
+          "pages": "124-126"
+        },
+        {
+          "clause": "41",
+          "title": "Accessibility of Uninsulated Live Parts, Film-Coated Wire, and Moving Parts",
+          "pages": "127-129"
+        },
+        {
+          "clause": "39.4",
+          "title": "Covers",
+          "pages": "119-120"
+        }
+      ],
+      "images": [
+        {
+          "url": "/images?path=/home/mitrran/uci-ocr-pipeline/uci-local-rag/kb_per_doc/e5c5a47a/images/39-6-3_c4f981ae86368f8f38efb6a1b48115f6ff21e2ea5d962b354740866a38436974.jpg",
+          "caption": "Clause 39.6.3 \u2014 Enclosure side openings"
+        },
+        {
+          "url": "/images?path=/home/mitrran/uci-ocr-pipeline/uci-local-rag/kb_per_doc/e5c5a47a/images/39-6-3_0146cd372aed72fffbd196cf49850dfe39bcf71b3d3fbf0f0fd67f46c422b32d.jpg",
+          "caption": "Clause 39.6.3 \u2014 Enclosure side openings"
+        },
+        {
+          "url": "/images?path=/home/mitrran/uci-ocr-pipeline/uci-local-rag/kb_per_doc/e5c5a47a/images/39-6-4_70a94106d9d8bf31c21c7994f75cf5d02ac89e4166ba0cad2920ebfeaafc26ca.jpg",
+          "caption": "Clause 39.6.4 \u2014 Enclosure bottom openings"
+        }
+      ],
+      "at": "2026-07-24T01:35:14.332755+00:00"
+    }
+  ]
+}
